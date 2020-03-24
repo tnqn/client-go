@@ -556,6 +556,15 @@ func (r *Request) WatchWithSpecificDecoders(wrapperDecoderFn func(io.ReadCloser)
 		return nil, fmt.Errorf("watching resources is not possible with this client (content-type: %s)", r.content.ContentType)
 	}
 
+	if r.timeout > 0 {
+		if r.ctx == nil {
+			r.ctx = context.Background()
+		}
+		var cancelFn context.CancelFunc
+		r.ctx, cancelFn = context.WithTimeout(r.ctx, r.timeout)
+		defer cancelFn()
+	}
+
 	url := r.URL().String()
 	req, err := http.NewRequest(r.verb, url, r.body)
 	if err != nil {
